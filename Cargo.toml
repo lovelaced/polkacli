@@ -1,0 +1,15 @@
+[package]
+name = "polkacli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+subxt = { version = "0.37" }
+subxt-signer = "0.37"
+tokio = { version = "1", features = ["full"] }
+clap = { version = "4", features = ["derive"] }
+dirs = { version = "5" }
+
+[features]
+default = []
+nft = []
