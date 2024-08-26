@@ -1,5 +1,9 @@
 use crate::error::Result;
-use subxt::{OnlineClient, PolkadotConfig, utils::{AccountId32, MultiAddress}};
+use colored::*;
+use subxt::{
+    OnlineClient, PolkadotConfig,
+    utils::{AccountId32, MultiAddress},
+};
 use crate::commands::statemint;
 use pallet_nfts::{CollectionSettings, ItemSettings};
 use std::marker::PhantomData;
@@ -27,37 +31,57 @@ fn to_item_bitflags(
 #[cfg(feature = "nft")]
 pub async fn mint_collection() -> Result<()> {
     let api = OnlineClient::<PolkadotConfig>::from_url("wss://asset-hub-paseo-rpc.dwellir.com").await?;
-    println!("Connection with parachain established.");
+    println!("{}", "🚀 Connection with parachain established.".green().bold());
 
     let account_signer = crate::config::load_account_from_config()?;
     let admin: MultiAddress<AccountId32, ()> = account_signer.public_key().into();
 
-    // Define the collection config using the actual types from pallet_nfts
     let config = statemint::runtime_types::pallet_nfts::types::CollectionConfig {
-        settings: to_collection_bitflags(CollectionSettings::all_enabled()), // Convert using to_collection_bitflags
+        settings: to_collection_bitflags(CollectionSettings::all_enabled()),
         max_supply: None,
         mint_settings: statemint::runtime_types::pallet_nfts::types::MintSettings {
             mint_type: statemint::runtime_types::pallet_nfts::types::MintType::Issuer,
             price: None,
             start_block: None,
             end_block: None,
-            default_item_settings: to_item_bitflags(ItemSettings::all_enabled()), // Convert using to_item_bitflags
+            default_item_settings: to_item_bitflags(ItemSettings::all_enabled()),
             __ignore: Default::default(),
         },
         __ignore: Default::default(),
     };
 
-    // Directly pass the config without wrapping in Static
     let payload = statemint::tx().nfts().create(admin, config);
 
-    let _collection_creation_events = api
+    let extrinsic_result = api
         .tx()
         .sign_and_submit_then_watch_default(&payload, &account_signer)
         .await?
         .wait_for_finalized_success()
         .await?;
 
-    println!("Collection created.");
+    let extrinsic_hash = extrinsic_result.extrinsic_hash();
+
+    // Find the `Created` event
+    let created_event = extrinsic_result.find_first::<statemint::nfts::events::Created>()?;
+    
+    if let Some(event) = created_event {
+        if let statemint::nfts::events::Created { collection, .. } = event {
+            println!("\n{}\n", "🎉 Collection Created Successfully!".blue().bold());
+            println!(
+                "{}: {}",
+                "Collection ID".yellow().bold(),
+                collection.to_string().bright_white()
+            );
+        }
+    } else {
+        println!("{}", "❌ Collection ID not found in events.".red().bold());
+    }
+
+    println!(
+        "{}: {}",
+        "Extrinsic Hash".yellow().bold(),
+        format!("{:?}", extrinsic_hash).bright_white()
+    );
 
     Ok(())
 }
@@ -65,26 +89,52 @@ pub async fn mint_collection() -> Result<()> {
 #[cfg(feature = "nft")]
 pub async fn mint_nft(collection_id: u32, nft_id: u32) -> Result<()> {
     let api = OnlineClient::<PolkadotConfig>::from_url("wss://asset-hub-paseo-rpc.dwellir.com").await?;
-    println!("Connection with parachain established.");
+    println!("{}", "🚀 Connection with parachain established.".green().bold());
 
     let account_signer = crate::config::load_account_from_config()?;
     let account: MultiAddress<AccountId32, ()> = account_signer.public_key().into();
 
-    // Optionally include the witness (can be None if not required)
     let witness: Option<statemint::runtime_types::pallet_nfts::types::MintWitness<u32, u128>> = None;
 
     let nft_creation_tx = statemint::tx()
         .nfts()
         .mint(collection_id, nft_id, account.clone(), witness);
 
-    let _nft_creation_events = api
+    let extrinsic_result = api
         .tx()
         .sign_and_submit_then_watch_default(&nft_creation_tx, &account_signer)
         .await?
         .wait_for_finalized_success()
         .await?;
 
-    println!("NFT created.");
+    let extrinsic_hash = extrinsic_result.extrinsic_hash();
+
+    // Find the `Minted` event or other relevant event
+    let minted_event = extrinsic_result.find_first::<statemint::nfts::events::Issued>()?;
+
+    if let Some(event) = minted_event {
+        if let statemint::nfts::events::Issued { collection, item, .. } = event {
+            println!("\n{}\n", "🎉 NFT Minted Successfully!".blue().bold());
+            println!(
+                "{}: {}",
+                "Collection ID".yellow().bold(),
+                collection.to_string().bright_white()
+            );
+            println!(
+                "{}: {}",
+                "NFT ID".yellow().bold(),
+                item.to_string().bright_white()
+            );
+        }
+    } else {
+        println!("{}", "❌ NFT mint event not found in events.".red().bold());
+    }
+
+    println!(
+        "{}: {}",
+        "Extrinsic Hash".yellow().bold(),
+        format!("{:?}", extrinsic_hash).bright_white()
+    );
 
     Ok(())
 }
