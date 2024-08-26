@@ -21,7 +21,7 @@ async fn set_account_from_mnemonic(mnemonic: String) -> Result<()> {
     let mnemonic = Mnemonic::parse(&mnemonic)
         .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
 
-    let pair = Keypair::from_phrase(&mnemonic, None)?;
+    let _pair = Keypair::from_phrase(&mnemonic, None)?;
 
     save_account_to_config("mnemonic", &mnemonic.to_string())?;
 
@@ -33,7 +33,7 @@ async fn set_account_from_uri(secret_uri: String) -> Result<()> {
     let suri = SecretUri::from_str(&secret_uri)
         .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
 
-    let pair = Keypair::from_uri(&suri)
+    let _pair = Keypair::from_uri(&suri)
         .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
 
     save_account_to_config("secret_uri", &secret_uri)?;

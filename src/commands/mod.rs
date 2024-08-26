@@ -2,10 +2,10 @@
 
 use crate::cli::Commands;
 use crate::commands::account::account_info;
-use crate::commands::balance::balance;
-//use crate::commands::mint::{mint_collection, mint_nft};
 use crate::config::set_account;
 use crate::error::Result;
+#[cfg(feature = "nft")]
+use crate::commands::mint::{mint_collection, mint_nft};
 
 #[subxt::subxt(runtime_metadata_path = "metadata.scale")]
 pub mod statemint {}
