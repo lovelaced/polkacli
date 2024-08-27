@@ -11,6 +11,7 @@ clap = { version = "4", features = ["derive"] }
 dirs = { version = "5" }
 pallet-nfts = { version = "31" }
 colored = "2.1"
+spinners = "4.1"
 
 [features]
 default = []

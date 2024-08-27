@@ -1,5 +1,6 @@
 use crate::error::Result;
 use colored::*;
+use spinners::{Spinner, Spinners};
 use subxt::{
     OnlineClient, PolkadotConfig,
     utils::{AccountId32, MultiAddress},
@@ -7,6 +8,8 @@ use subxt::{
 use crate::commands::statemint;
 use pallet_nfts::{CollectionSettings, ItemSettings};
 use std::marker::PhantomData;
+use std::time::Duration;
+use tokio::time::sleep;
 
 // Function to convert CollectionSettings to the required BitFlags1 type
 fn to_collection_bitflags(
@@ -52,24 +55,47 @@ pub async fn mint_collection() -> Result<()> {
 
     let payload = statemint::tx().nfts().create(admin, config);
 
+    // Start the spinner for preparation
+    let mut sp = Spinner::new(Spinners::Dots12, "⏳ Preparing transaction...".yellow().bold().to_string());
+    sleep(Duration::from_secs(1)).await;
+    sp.stop_and_persist("🚀", "Sending transaction to the network...".yellow().bold().to_string());
+
     let extrinsic_result = api
         .tx()
         .sign_and_submit_then_watch_default(&payload, &account_signer)
-        .await?
-        .wait_for_finalized_success()
         .await?;
+
+    // Update the spinner for finalization with periodic status updates
+    let mut sp = Spinner::new(Spinners::Dots12, "⏳ Finalizing transaction...".yellow().bold().to_string());
+
+    for i in 1..=5 {
+        sleep(Duration::from_secs(2)).await;
+        sp.stop_and_persist(
+            "⏳",
+            format!("Finalizing transaction... ({}s)", i * 2)
+                .yellow()
+                .bold()
+                .to_string(),
+        );
+        sp = Spinner::new(Spinners::Dots12, "".into());
+    }
+
+    let extrinsic_result = extrinsic_result.wait_for_finalized_success().await?;
+
+    // Stop the spinner with a final message
+    sp.stop_and_persist("✅", "Collection creation finalized!".green().bold().to_string());
 
     let extrinsic_hash = extrinsic_result.extrinsic_hash();
 
     // Find the `Created` event
     let created_event = extrinsic_result.find_first::<statemint::nfts::events::Created>()?;
-    
+
     if let Some(event) = created_event {
         if let statemint::nfts::events::Created { collection, .. } = event {
             println!("\n{}\n", "🎉 Collection Created Successfully!".blue().bold());
             println!(
                 "{}: {}",
-                "Collection ID".yellow().bold(),
+                "📦 Collection ID".cyan().bold(),
                 collection.to_string().bright_white()
             );
         }
@@ -79,7 +105,7 @@ pub async fn mint_collection() -> Result<()> {
 
     println!(
         "{}: {}",
-        "Extrinsic Hash".yellow().bold(),
+        "🔗 Extrinsic Hash".cyan().bold(),
         format!("{:?}", extrinsic_hash).bright_white()
     );
 
@@ -100,12 +126,35 @@ pub async fn mint_nft(collection_id: u32, nft_id: u32) -> Result<()> {
         .nfts()
         .mint(collection_id, nft_id, account.clone(), witness);
 
+    // Start the spinner for preparation
+    let mut sp = Spinner::new(Spinners::Dots12, "⏳ Preparing transaction...".yellow().bold().to_string());
+    sleep(Duration::from_secs(1)).await;
+    sp.stop_and_persist("🚀", "Sending transaction to the network...".yellow().bold().to_string());
+
     let extrinsic_result = api
         .tx()
         .sign_and_submit_then_watch_default(&nft_creation_tx, &account_signer)
-        .await?
-        .wait_for_finalized_success()
         .await?;
+
+    // Update the spinner for finalization with periodic status updates
+    let mut sp = Spinner::new(Spinners::Dots12, "⏳ Finalizing transaction...".yellow().bold().to_string());
+
+    for i in 1..=5 {
+        sleep(Duration::from_secs(2)).await;
+        sp.stop_and_persist(
+            "⏳",
+            format!("Finalizing transaction... ({}s)", i * 2)
+                .yellow()
+                .bold()
+                .to_string(),
+        );
+        sp = Spinner::new(Spinners::Dots12, "".into());
+    }
+
+    let extrinsic_result = extrinsic_result.wait_for_finalized_success().await?;
+
+    // Stop the spinner with a final message
+    sp.stop_and_persist("✅", "NFT minting finalized!".green().bold().to_string());
 
     let extrinsic_hash = extrinsic_result.extrinsic_hash();
 
@@ -117,12 +166,12 @@ pub async fn mint_nft(collection_id: u32, nft_id: u32) -> Result<()> {
             println!("\n{}\n", "🎉 NFT Minted Successfully!".blue().bold());
             println!(
                 "{}: {}",
-                "Collection ID".yellow().bold(),
+                "📦 Collection ID".cyan().bold(),
                 collection.to_string().bright_white()
             );
             println!(
                 "{}: {}",
-                "NFT ID".yellow().bold(),
+                "🎨 NFT ID".cyan().bold(),
                 item.to_string().bright_white()
             );
         }
@@ -132,7 +181,7 @@ pub async fn mint_nft(collection_id: u32, nft_id: u32) -> Result<()> {
 
     println!(
         "{}: {}",
-        "Extrinsic Hash".yellow().bold(),
+        "🔗 Extrinsic Hash".cyan().bold(),
         format!("{:?}", extrinsic_hash).bright_white()
     );
 

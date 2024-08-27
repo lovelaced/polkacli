@@ -21,6 +21,12 @@ pub enum Commands {
         #[arg(value_name = "NFT_ID")]
         nft_id: u32,
     },
+    ShowNft {
+        #[arg(value_name = "COLLECTION_ID")]
+        collection_id: u32,
+        #[arg(value_name = "NFT_ID")]
+        nft_id: u32,
+    },
     /// Set the account to use for cli
     SetAccount {
         #[arg(long, value_name = "MNEMONIC", conflicts_with = "secret_uri")]

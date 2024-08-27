@@ -6,6 +6,7 @@ use crate::config::set_account;
 use crate::error::Result;
 #[cfg(feature = "nft")]
 use crate::commands::mint::{mint_collection, mint_nft};
+use crate::commands::show_nft::show_nft;
 
 #[subxt::subxt(runtime_metadata_path = "metadata.scale")]
 pub mod statemint {}
@@ -13,7 +14,7 @@ pub mod statemint {}
 pub mod account;
 pub mod balance;
 pub mod mint;
-
+pub mod show_nft;
 
 
 pub async fn run_command(cli: Commands) -> Result<()> {
@@ -22,6 +23,7 @@ pub async fn run_command(cli: Commands) -> Result<()> {
         Commands::MintCollection => mint_collection().await,
         #[cfg(feature = "nft")]
         Commands::MintNft { collection_id, nft_id } => mint_nft(collection_id, nft_id).await,
+        Commands::ShowNft { collection_id, nft_id } => show_nft(collection_id, nft_id).await,
         Commands::SetAccount { mnemonic, secret_uri } => set_account(mnemonic, secret_uri).await,
         Commands::Balance { address } => balance::balance(address).await,
         Commands::Account { public_key } => account_info(public_key).await,
