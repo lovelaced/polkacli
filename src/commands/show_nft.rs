@@ -11,7 +11,7 @@ use tokio::time::sleep;
 
 // Function to convert AccountId32 to SS58 format
 fn format_account_ss58(account_id: &AccountId32) -> String {
-    account_id.to_string()
+    account_id.to_string() // If you want to convert it to SS58, use the appropriate method here
 }
 
 #[cfg(feature = "nft")]
@@ -27,6 +27,10 @@ pub async fn show_nft(collection_id: u32, nft_id: u32) -> Result<()> {
     let storage_query = statemint::storage().nfts().item(collection_id, nft_id);
     let nft_info = api.storage().at_latest().await?.fetch(&storage_query).await?;
 
+    // Fetch the metadata associated with the NFT
+    let metadata_query = statemint::storage().nfts().item_metadata_of(collection_id, nft_id);
+    let metadata_info = api.storage().at_latest().await?.fetch(&metadata_query).await?;
+
     // Stop the spinner with a final message
     sp.stop_and_persist("✅", "NFT data retrieved!".green().bold().to_string());
 
@@ -35,11 +39,20 @@ pub async fn show_nft(collection_id: u32, nft_id: u32) -> Result<()> {
         println!("\n{}\n", "🎨 NFT Information".blue().bold());
         println!("{}: {}", "Collection ID".cyan().bold(), collection_id.to_string().bright_white());
         println!("{}: {}", "NFT ID".cyan().bold(), nft_id.to_string().bright_white());
-        println!("{}: {:?}", "Owner".cyan().bold(), format_account_ss58(&info.owner));
+        println!("{}: {}", "Owner".cyan().bold(), format_account_ss58(&info.owner));
         println!("{}: {:?}", "Approvals".cyan().bold(), info.approvals);
         println!("{}: {:?}", "Deposit".cyan().bold(), info.deposit);
     } else {
         println!("{}", "❌ NFT not found.".red().bold());
+    }
+
+    // Display the metadata information
+    if let Some(metadata) = metadata_info {
+        println!("\n{}\n", "📝 NFT Metadata".blue().bold());
+        println!("{}: {:?}", "Data".cyan().bold(), metadata.data);
+        println!("{}: {:?}", "Deposit".cyan().bold(), metadata.deposit);
+    } else {
+        println!("{}", "❌ Metadata not found.".red().bold());
     }
 
     Ok(())
