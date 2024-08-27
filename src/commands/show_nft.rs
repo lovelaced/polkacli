@@ -5,7 +5,7 @@ use subxt::{
     OnlineClient, PolkadotConfig,
     utils::{AccountId32},
 };
-use crate::commands::statemint;
+use crate::commands::assethub;
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -24,11 +24,11 @@ pub async fn show_nft(collection_id: u32, nft_id: u32) -> Result<()> {
     sleep(Duration::from_secs(1)).await;
 
     // Use the API to query the NFT data based on `collection_id` and `nft_id`
-    let storage_query = statemint::storage().nfts().item(collection_id, nft_id);
+    let storage_query = assethub::storage().nfts().item(collection_id, nft_id);
     let nft_info = api.storage().at_latest().await?.fetch(&storage_query).await?;
 
     // Fetch the metadata associated with the NFT
-    let metadata_query = statemint::storage().nfts().item_metadata_of(collection_id, nft_id);
+    let metadata_query = assethub::storage().nfts().item_metadata_of(collection_id, nft_id);
     let metadata_info = api.storage().at_latest().await?.fetch(&metadata_query).await?;
 
     // Stop the spinner with a final message

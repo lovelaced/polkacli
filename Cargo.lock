@@ -2983,7 +2983,6 @@ dependencies = [
  "clap",
  "colored",
  "dirs",
- "futures",
  "pallet-nfts",
  "spinners",
  "subxt",

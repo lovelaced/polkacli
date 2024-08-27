@@ -8,7 +8,7 @@ use subxt::{
 use std::str::FromStr;
 use std::time::Duration;
 use tokio::time::sleep;
-use crate::commands::statemint;
+use crate::commands::assethub;
 
 pub async fn send(recipient: String, amount: u128) -> Result<()> {
     // Establish a connection to the parachain
@@ -26,7 +26,7 @@ pub async fn send(recipient: String, amount: u128) -> Result<()> {
     let amount_in_plancks = amount * 10u128.pow(10);
 
     // Create transfer payload
-    let payload = statemint::tx().balances().transfer_keep_alive(MultiAddress::Id(recipient.clone()), amount_in_plancks);
+    let payload = assethub::tx().balances().transfer_keep_alive(MultiAddress::Id(recipient.clone()), amount_in_plancks);
 
     // Start the spinner for preparation
     let mut sp = Spinner::new(Spinners::Dots12, "⏳ Preparing transaction...".yellow().bold().to_string());

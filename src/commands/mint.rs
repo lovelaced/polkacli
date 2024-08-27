@@ -5,7 +5,7 @@ use subxt::{
     OnlineClient, PolkadotConfig,
     utils::{AccountId32, MultiAddress},
 };
-use crate::commands::statemint;
+use crate::commands::assethub;
 use pallet_nfts::{CollectionSettings, ItemSettings};
 use std::marker::PhantomData;
 use std::time::Duration;
@@ -14,21 +14,21 @@ use tokio::time::sleep;
 // Function to convert CollectionSettings to the required BitFlags1 type
 fn to_collection_bitflags(
     settings: CollectionSettings,
-) -> statemint::runtime_types::pallet_nfts::types::BitFlags1<
-    statemint::runtime_types::pallet_nfts::types::CollectionSetting,
+) -> assethub::runtime_types::pallet_nfts::types::BitFlags1<
+    assethub::runtime_types::pallet_nfts::types::CollectionSetting,
 > {
     let bits = settings.0.bits();
-    statemint::runtime_types::pallet_nfts::types::BitFlags1(bits, PhantomData)
+    assethub::runtime_types::pallet_nfts::types::BitFlags1(bits, PhantomData)
 }
 
 // Function to convert ItemSettings to the required BitFlags2 type
 fn to_item_bitflags(
     settings: ItemSettings,
-) -> statemint::runtime_types::pallet_nfts::types::BitFlags2<
-    statemint::runtime_types::pallet_nfts::types::ItemSetting,
+) -> assethub::runtime_types::pallet_nfts::types::BitFlags2<
+    assethub::runtime_types::pallet_nfts::types::ItemSetting,
 > {
     let bits = settings.0.bits();
-    statemint::runtime_types::pallet_nfts::types::BitFlags2(bits, PhantomData)
+    assethub::runtime_types::pallet_nfts::types::BitFlags2(bits, PhantomData)
 }
 
 #[cfg(feature = "nft")]
@@ -39,11 +39,11 @@ pub async fn mint_collection() -> Result<()> {
     let account_signer = crate::config::load_account_from_config()?;
     let admin: MultiAddress<AccountId32, ()> = account_signer.public_key().into();
 
-    let config = statemint::runtime_types::pallet_nfts::types::CollectionConfig {
+    let config = assethub::runtime_types::pallet_nfts::types::CollectionConfig {
         settings: to_collection_bitflags(CollectionSettings::all_enabled()),
         max_supply: None,
-        mint_settings: statemint::runtime_types::pallet_nfts::types::MintSettings {
-            mint_type: statemint::runtime_types::pallet_nfts::types::MintType::Issuer,
+        mint_settings: assethub::runtime_types::pallet_nfts::types::MintSettings {
+            mint_type: assethub::runtime_types::pallet_nfts::types::MintType::Issuer,
             price: None,
             start_block: None,
             end_block: None,
@@ -53,7 +53,7 @@ pub async fn mint_collection() -> Result<()> {
         __ignore: Default::default(),
     };
 
-    let payload = statemint::tx().nfts().create(admin, config);
+    let payload = assethub::tx().nfts().create(admin, config);
 
     // Start the spinner for preparation
     let mut sp = Spinner::new(Spinners::Dots12, "⏳ Preparing transaction...".yellow().bold().to_string());
@@ -88,10 +88,10 @@ pub async fn mint_collection() -> Result<()> {
     let extrinsic_hash = extrinsic_result.extrinsic_hash();
 
     // Find the `Created` event
-    let created_event = extrinsic_result.find_first::<statemint::nfts::events::Created>()?;
+    let created_event = extrinsic_result.find_first::<assethub::nfts::events::Created>()?;
 
     if let Some(event) = created_event {
-       if let statemint::nfts::events::Created { collection, .. } = event {
+       if let assethub::nfts::events::Created { collection, .. } = event {
             println!("\n{}\n", "🎉 Collection Created Successfully!".blue().bold());
             println!(
                 "{}: {}",
@@ -120,9 +120,9 @@ pub async fn mint_nft(collection_id: u32, nft_id: u32) -> Result<()> {
     let account_signer = crate::config::load_account_from_config()?;
     let account: MultiAddress<AccountId32, ()> = account_signer.public_key().into();
 
-    let witness: Option<statemint::runtime_types::pallet_nfts::types::MintWitness<u32, u128>> = None;
+    let witness: Option<assethub::runtime_types::pallet_nfts::types::MintWitness<u32, u128>> = None;
 
-    let nft_creation_tx = statemint::tx()
+    let nft_creation_tx = assethub::tx()
         .nfts()
         .mint(collection_id, nft_id, account.clone(), witness);
 
@@ -159,10 +159,10 @@ pub async fn mint_nft(collection_id: u32, nft_id: u32) -> Result<()> {
     let extrinsic_hash = extrinsic_result.extrinsic_hash();
 
     // Find the `Minted` event or other relevant event
-    let minted_event = extrinsic_result.find_first::<statemint::nfts::events::Issued>()?;
+    let minted_event = extrinsic_result.find_first::<assethub::nfts::events::Issued>()?;
 
     if let Some(event) = minted_event {
-        if let statemint::nfts::events::Issued { collection, item, .. } = event {
+        if let assethub::nfts::events::Issued { collection, item, .. } = event {
             println!("\n{}\n", "🎉 NFT Minted Successfully!".blue().bold());
             println!(
                 "{}: {}",

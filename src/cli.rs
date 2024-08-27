@@ -2,7 +2,7 @@ use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(name = "polkacli")]
-#[command(about = "CLI for interacting with Statemint")]
+#[command(about = "CLI for interacting with AssetHub")]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,

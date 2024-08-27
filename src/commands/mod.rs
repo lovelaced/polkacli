@@ -10,7 +10,7 @@ use crate::commands::show_nft::show_nft;
 use crate::commands::show_collection::show_collection;
 
 #[subxt::subxt(runtime_metadata_path = "metadata.scale")]
-pub mod statemint {}
+pub mod assethub {}
 
 pub mod account;
 pub mod balance;

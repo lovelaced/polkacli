@@ -1,7 +1,7 @@
 use crate::error::Result;
 use subxt::{OnlineClient, PolkadotConfig, utils::AccountId32};
 use std::str::FromStr;
-use crate::commands::statemint;
+use crate::commands::assethub;
 
 
 pub async fn account_info(public_key: String) -> Result<()> {
@@ -10,12 +10,12 @@ pub async fn account_info(public_key: String) -> Result<()> {
 
     let account: AccountId32 = AccountId32::from_str(&public_key)?;
 
-    let storage_query = statemint::storage().system().account(account.clone());
+    let storage_query = assethub::storage().system().account(account.clone());
 
     let result: Option<
-        statemint::runtime_types::frame_system::AccountInfo<
+        assethub::runtime_types::frame_system::AccountInfo<
             u32,
-            statemint::runtime_types::pallet_balances::types::AccountData<u128>,
+            assethub::runtime_types::pallet_balances::types::AccountData<u128>,
         >
     > = api.storage().at_latest().await?.fetch(&storage_query).await?;
 

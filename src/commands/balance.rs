@@ -1,7 +1,7 @@
 use crate::error::Result;
 use colored::*;
 use subxt::{OnlineClient, PolkadotConfig, utils::AccountId32};
-use crate::commands::statemint;
+use crate::commands::assethub;
 use std::str::FromStr;
 
 pub async fn balance(address: Option<String>) -> Result<()> {
@@ -16,12 +16,12 @@ pub async fn balance(address: Option<String>) -> Result<()> {
         account_signer.public_key().into()
     };
 
-    let storage_query = statemint::storage().system().account(account.clone());
+    let storage_query = assethub::storage().system().account(account.clone());
 
     let result: Option<
-        statemint::runtime_types::frame_system::AccountInfo<
+        assethub::runtime_types::frame_system::AccountInfo<
             u32,
-            statemint::runtime_types::pallet_balances::types::AccountData<u128>,
+            assethub::runtime_types::pallet_balances::types::AccountData<u128>,
         >
     > = api.storage().at_latest().await?.fetch(&storage_query).await?;
 

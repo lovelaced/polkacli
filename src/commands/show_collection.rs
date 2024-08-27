@@ -5,7 +5,7 @@ use subxt::{
     OnlineClient, PolkadotConfig,
     utils::{AccountId32},
 };
-use crate::commands::statemint;
+use crate::commands::assethub;
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -24,11 +24,11 @@ pub async fn show_collection(collection_id: u32) -> Result<()> {
     sleep(Duration::from_secs(1)).await;
 
     // Fetch the collection details
-    let collection_query = statemint::storage().nfts().collection(collection_id);
+    let collection_query = assethub::storage().nfts().collection(collection_id);
     let collection_info = api.storage().at_latest().await?.fetch(&collection_query).await?;
 
     // Fetch the collection metadata
-    let metadata_query = statemint::storage().nfts().collection_metadata_of(collection_id);
+    let metadata_query = assethub::storage().nfts().collection_metadata_of(collection_id);
     let metadata_info = api.storage().at_latest().await?.fetch(&metadata_query).await?;
 
     // Stop the spinner with a final message
