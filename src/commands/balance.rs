@@ -1,11 +1,12 @@
 use crate::error::Result;
+use colored::*;
 use subxt::{OnlineClient, PolkadotConfig, utils::AccountId32};
 use crate::commands::statemint;
 use std::str::FromStr;
 
 pub async fn balance(address: Option<String>) -> Result<()> {
     let api = OnlineClient::<PolkadotConfig>::from_url("wss://asset-hub-paseo-rpc.dwellir.com").await?;
-    println!("Connection with parachain established.");
+    println!("{}", "🚀 Connection with parachain established.".green().bold());
 
     // Determine the account to use based on the presence of an address argument
     let account: AccountId32 = if let Some(addr) = address {
@@ -29,9 +30,24 @@ pub async fn balance(address: Option<String>) -> Result<()> {
         let unit = 10u128.pow(10); // 1 PAS = 10^10 Plancks
         let human_readable_balance = free_balance as f64 / unit as f64;
 
-        println!("Free balance of account {}: {:.10} PAS", account, human_readable_balance);
+        println!(
+            "{} {}: {}",
+            "📜 Account".cyan().bold(),
+            "Address".yellow().bold(),
+            account.to_string().bright_white()
+        );
+        println!(
+            "{} {:.10} {}",
+            "💰 Free balance:".cyan().bold(),
+            human_readable_balance,
+            "PAS".bright_white()
+        );
     } else {
-        println!("No account data found for account {}", account);
+        println!(
+            "{} {}",
+            "❌ No account data found for account".red().bold(),
+            account.to_string().bright_white()
+        );
     }
 
     Ok(())

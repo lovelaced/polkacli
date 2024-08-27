@@ -34,6 +34,13 @@ pub enum Commands {
         #[arg(long, value_name = "SECRET_URI", conflicts_with = "mnemonic")]
         secret_uri: Option<String>,
     },
+    /// Send funds to address for amount
+    Send {
+        #[arg(value_name = "ADDRESS")]
+        address: String,
+        #[arg(value_name = "AMOUNT")]
+        amount: u128,
+    },
     /// Print the balance of the configured account
     /// Print the balance of the configured account or a provided address
     Balance {

@@ -3,7 +3,7 @@ use colored::*;
 use spinners::{Spinner, Spinners};
 use subxt::{
     OnlineClient, PolkadotConfig,
-    utils::{AccountId32, MultiAddress},
+    utils::{AccountId32},
 };
 use crate::commands::statemint;
 use std::time::Duration;

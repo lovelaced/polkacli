@@ -15,7 +15,7 @@ pub mod account;
 pub mod balance;
 pub mod mint;
 pub mod show_nft;
-
+pub mod send;
 
 pub async fn run_command(cli: Commands) -> Result<()> {
     match cli {
@@ -24,6 +24,7 @@ pub async fn run_command(cli: Commands) -> Result<()> {
         #[cfg(feature = "nft")]
         Commands::MintNft { collection_id, nft_id } => mint_nft(collection_id, nft_id).await,
         Commands::ShowNft { collection_id, nft_id } => show_nft(collection_id, nft_id).await,
+        Commands::Send { address, amount } => send::send(address, amount).await,
         Commands::SetAccount { mnemonic, secret_uri } => set_account(mnemonic, secret_uri).await,
         Commands::Balance { address } => balance::balance(address).await,
         Commands::Account { public_key } => account_info(public_key).await,

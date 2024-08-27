@@ -91,7 +91,7 @@ pub async fn mint_collection() -> Result<()> {
     let created_event = extrinsic_result.find_first::<statemint::nfts::events::Created>()?;
 
     if let Some(event) = created_event {
-        if let statemint::nfts::events::Created { collection, .. } = event {
+       if let statemint::nfts::events::Created { collection, .. } = event {
             println!("\n{}\n", "🎉 Collection Created Successfully!".blue().bold());
             println!(
                 "{}: {}",
