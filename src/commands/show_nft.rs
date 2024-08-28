@@ -1,22 +1,28 @@
 use crate::error::Result;
 use colored::*;
 use spinners::{Spinner, Spinners};
-use subxt::{
-    OnlineClient, PolkadotConfig,
-    utils::{AccountId32},
-};
+use subxt::utils::AccountId32;
 use crate::commands::assethub;
 use std::time::Duration;
 use tokio::time::sleep;
+use crate::client::get_client;
 
 // Function to convert AccountId32 to SS58 format
 fn format_account_ss58(account_id: &AccountId32) -> String {
     account_id.to_string() // If you want to convert it to SS58, use the appropriate method here
 }
 
+// Function to convert a BoundedVec of bytes to a human-readable string
+fn parse_metadata_data(data: &assethub::runtime_types::bounded_collections::bounded_vec::BoundedVec<u8>) -> String {
+    match String::from_utf8(data.0.to_vec()) {
+        Ok(parsed_string) => parsed_string,
+        Err(_) => format!("{:?}", data), // Fall back to showing the raw bytes if parsing fails
+    }
+}
+
 #[cfg(feature = "nft")]
 pub async fn show_nft(collection_id: u32, nft_id: u32) -> Result<()> {
-    let api = OnlineClient::<PolkadotConfig>::from_url("wss://asset-hub-paseo-rpc.dwellir.com").await?;
+    let api = get_client().await?;
     println!("{}", "🔍 Fetching NFT information...".green().bold());
 
     // Start the spinner
@@ -49,7 +55,7 @@ pub async fn show_nft(collection_id: u32, nft_id: u32) -> Result<()> {
     // Display the metadata information
     if let Some(metadata) = metadata_info {
         println!("\n{}\n", "📝 NFT Metadata".blue().bold());
-        println!("{}: {:?}", "Data".cyan().bold(), metadata.data);
+        println!("{}: {}", "Data".cyan().bold(), parse_metadata_data(&metadata.data));
         println!("{}: {:?}", "Deposit".cyan().bold(), metadata.deposit);
     } else {
         println!("{}", "❌ Metadata not found.".red().bold());

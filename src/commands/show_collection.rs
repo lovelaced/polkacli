@@ -2,12 +2,12 @@ use crate::error::Result;
 use colored::*;
 use spinners::{Spinner, Spinners};
 use subxt::{
-    OnlineClient, PolkadotConfig,
-    utils::{AccountId32},
+    utils::AccountId32,
 };
 use crate::commands::assethub;
 use std::time::Duration;
 use tokio::time::sleep;
+use crate::client::get_client;
 
 // Function to convert AccountId32 to SS58 format
 fn format_account_ss58(account_id: &AccountId32) -> String {
@@ -16,7 +16,7 @@ fn format_account_ss58(account_id: &AccountId32) -> String {
 
 #[cfg(feature = "nft")]
 pub async fn show_collection(collection_id: u32) -> Result<()> {
-    let api = OnlineClient::<PolkadotConfig>::from_url("wss://asset-hub-paseo-rpc.dwellir.com").await?;
+    let api = get_client().await?;
     println!("{}", "🔍 Fetching Collection information...".green().bold());
 
     // Start the spinner
@@ -25,11 +25,31 @@ pub async fn show_collection(collection_id: u32) -> Result<()> {
 
     // Fetch the collection details
     let collection_query = assethub::storage().nfts().collection(collection_id);
-    let collection_info = api.storage().at_latest().await?.fetch(&collection_query).await?;
+    let collection_info = match api.storage().at_latest().await?.fetch(&collection_query).await {
+        Ok(Some(info)) => Some(info),
+        Ok(None) => {
+            sp.stop_and_persist("❌", "Collection not found.".red().bold().to_string());
+            return Ok(());
+        }
+        Err(e) => {
+            sp.stop_and_persist("❌", format!("Error fetching collection data: {}", e).red().bold().to_string());
+            return Err(Box::new(e));
+        }
+    };
 
     // Fetch the collection metadata
     let metadata_query = assethub::storage().nfts().collection_metadata_of(collection_id);
-    let metadata_info = api.storage().at_latest().await?.fetch(&metadata_query).await?;
+    let metadata_info = match api.storage().at_latest().await?.fetch(&metadata_query).await {
+        Ok(Some(metadata)) => Some(metadata),
+        Ok(None) => {
+            println!("{}", "❌ Metadata not found.".red().bold());
+            None
+        }
+        Err(e) => {
+            sp.stop_and_persist("❌", format!("Error fetching metadata: {}", e).red().bold().to_string());
+            return Err(Box::new(e));
+        }
+    };
 
     // Stop the spinner with a final message
     sp.stop_and_persist("✅", "Collection data retrieved!".green().bold().to_string());
@@ -44,8 +64,6 @@ pub async fn show_collection(collection_id: u32) -> Result<()> {
         println!("{}: {}", "Item Metadata Count".cyan().bold(), info.item_metadatas.to_string().bright_white());
         println!("{}: {}", "Item Config Count".cyan().bold(), info.item_configs.to_string().bright_white());
         println!("{}: {:?}", "Attributes".cyan().bold(), info.attributes);
-    } else {
-        println!("{}", "❌ Collection not found.".red().bold());
     }
 
     // Display the metadata information
@@ -53,8 +71,6 @@ pub async fn show_collection(collection_id: u32) -> Result<()> {
         println!("\n{}\n", "📝 Collection Metadata".blue().bold());
         println!("{}: {:?}", "Data".cyan().bold(), metadata.data);
         println!("{}: {:?}", "Deposit".cyan().bold(), metadata.deposit);
-    } else {
-        println!("{}", "❌ Metadata not found.".red().bold());
     }
 
     Ok(())

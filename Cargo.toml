@@ -12,6 +12,8 @@ dirs = { version = "5" }
 pallet-nfts = { version = "31" }
 colored = "2.1"
 spinners = "4.1"
+once_cell = "1.19"
+sp-core = "34"
 
 [features]
 default = []

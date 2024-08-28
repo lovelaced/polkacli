@@ -3,9 +3,11 @@ use colored::*;
 use subxt::{OnlineClient, PolkadotConfig, utils::AccountId32};
 use crate::commands::assethub;
 use std::str::FromStr;
+use crate::client::get_client;
 
 pub async fn balance(address: Option<String>) -> Result<()> {
-    let api = OnlineClient::<PolkadotConfig>::from_url("wss://asset-hub-paseo-rpc.dwellir.com").await?;
+//    let api = OnlineClient::<PolkadotConfig>::from_url("wss://asset-hub-paseo-rpc.dwellir.com").await?;
+    let api = get_client().await?;
     println!("{}", "🚀 Connection with parachain established.".green().bold());
 
     // Determine the account to use based on the presence of an address argument

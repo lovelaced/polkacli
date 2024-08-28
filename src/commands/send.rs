@@ -9,10 +9,11 @@ use std::str::FromStr;
 use std::time::Duration;
 use tokio::time::sleep;
 use crate::commands::assethub;
+use crate::client::get_client;
 
 pub async fn send(recipient: String, amount: u128) -> Result<()> {
     // Establish a connection to the parachain
-    let api = OnlineClient::<PolkadotConfig>::from_url("wss://asset-hub-paseo-rpc.dwellir.com").await?;
+    let api = get_client().await?;
     println!("{}", "🚀 Connection with parachain established.".green().bold());
 
     // Parse recipient address

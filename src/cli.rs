@@ -31,21 +31,25 @@ pub enum Commands {
         #[arg(value_name = "COLLECTION_ID")]
         collection_id: u32,
     },
-    /// Set the account to use for cli
+    /// Set the account to use for CLI
     SetAccount {
         #[arg(long, value_name = "MNEMONIC", conflicts_with = "secret_uri")]
         mnemonic: Option<String>,
         #[arg(long, value_name = "SECRET_URI", conflicts_with = "mnemonic")]
         secret_uri: Option<String>,
     },
-    /// Send funds to address for amount
+    /// Set the RPC URL for the client
+    SetRpc {
+        #[arg(value_name = "RPC_URL")]
+        rpc_url: String,
+    },
+    /// Send funds to an address
     Send {
         #[arg(value_name = "ADDRESS")]
         address: String,
         #[arg(value_name = "AMOUNT")]
         amount: u128,
     },
-    /// Print the balance of the configured account
     /// Print the balance of the configured account or a provided address
     Balance {
         #[arg(value_name = "ADDRESS")]

@@ -8,6 +8,7 @@ use crate::error::Result;
 use crate::commands::mint::{mint_collection, mint_nft};
 use crate::commands::show_nft::show_nft;
 use crate::commands::show_collection::show_collection;
+use crate::config::set_rpc_url;
 
 #[subxt::subxt(runtime_metadata_path = "metadata.scale")]
 pub mod assethub {}
@@ -29,6 +30,7 @@ pub async fn run_command(cli: Commands) -> Result<()> {
         Commands::ShowCollection { collection_id } => show_collection(collection_id).await,
         Commands::Send { address, amount } => send::send(address, amount).await,
         Commands::SetAccount { mnemonic, secret_uri } => set_account(mnemonic, secret_uri).await,
+        Commands::SetRpc { rpc_url } => set_rpc_url(rpc_url).await,
         Commands::Balance { address } => balance::balance(address).await,
         Commands::Account { public_key } => account_info(public_key).await,
     }

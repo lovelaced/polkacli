@@ -2,10 +2,10 @@ use crate::error::Result;
 use subxt::{OnlineClient, PolkadotConfig, utils::AccountId32};
 use std::str::FromStr;
 use crate::commands::assethub;
-
+use crate::client::get_client;
 
 pub async fn account_info(public_key: String) -> Result<()> {
-    let api = OnlineClient::<PolkadotConfig>::from_url("wss://asset-hub-paseo-rpc.dwellir.com").await?;
+    let api = get_client().await?;
     println!("Connection with parachain established.");
 
     let account: AccountId32 = AccountId32::from_str(&public_key)?;

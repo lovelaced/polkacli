@@ -10,6 +10,7 @@ use pallet_nfts::{CollectionSettings, ItemSettings};
 use std::marker::PhantomData;
 use std::time::Duration;
 use tokio::time::sleep;
+use crate::client::get_client;
 
 // Function to convert CollectionSettings to the required BitFlags1 type
 fn to_collection_bitflags(
@@ -33,7 +34,7 @@ fn to_item_bitflags(
 
 #[cfg(feature = "nft")]
 pub async fn mint_collection() -> Result<()> {
-    let api = OnlineClient::<PolkadotConfig>::from_url("wss://asset-hub-paseo-rpc.dwellir.com").await?;
+    let api = get_client().await?;
     println!("{}", "🚀 Connection with parachain established.".green().bold());
 
     let account_signer = crate::config::load_account_from_config()?;
@@ -114,7 +115,7 @@ pub async fn mint_collection() -> Result<()> {
 
 #[cfg(feature = "nft")]
 pub async fn mint_nft(collection_id: u32, nft_id: u32) -> Result<()> {
-    let api = OnlineClient::<PolkadotConfig>::from_url("wss://asset-hub-paseo-rpc.dwellir.com").await?;
+    let api = get_client().await?;
     println!("{}", "🚀 Connection with parachain established.".green().bold());
 
     let account_signer = crate::config::load_account_from_config()?;
