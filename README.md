@@ -74,3 +74,17 @@ found a bug? have a feature request? want to write a README yourself? pull reque
 licensed under apache 2.0, because open source should be free, but not in the "i can't make money off this" way.
 
 happy hacking. or whatever it is you're doing.
+--------
+info on how minting nft flow works:
+
+--json <nft.json>:
+
+If the --json argument is provided, the specified JSON file is loaded.
+The code checks if the JSON file already contains an "image" field.
+If the "image" field is present, it uses that link directly.
+If the "image" field is absent and --image <image.jpg> is provided, the specified image file is pinned to IPFS, and its IPFS link is added to the JSON.
+If --image is not provided, it attempts to infer an image file based on the JSON file's name (e.g., nft.json -> nft.jpg).
+--image <image.jpg>:
+
+If the --image argument is provided, the specified image file is pinned to IPFS and linked in the JSON.
+If --json is not provided but --image is, the code will fail because a corresponding JSON file is required to mint the NFT.

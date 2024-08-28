@@ -1,5 +1,5 @@
 use crate::error::Result;
-use subxt::{OnlineClient, PolkadotConfig, utils::AccountId32};
+use subxt::utils::AccountId32;
 use std::str::FromStr;
 use crate::commands::assethub;
 use crate::client::get_client;

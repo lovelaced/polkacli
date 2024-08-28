@@ -2,7 +2,6 @@ use crate::error::Result;
 use colored::*;
 use spinners::{Spinner, Spinners};
 use subxt::{
-    OnlineClient, PolkadotConfig,
     utils::{AccountId32, MultiAddress},
 };
 use std::str::FromStr;

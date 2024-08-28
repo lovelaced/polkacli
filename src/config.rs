@@ -1,77 +1,55 @@
-use subxt_signer::sr25519::Keypair;
-use subxt_signer::bip39::Mnemonic;
-use std::fs;
-use std::io::{self, Write};
-use dirs;
-use std::str::FromStr;
-use subxt_signer::SecretUri;
 use crate::error::Result;
+use dirs::home_dir;
+use std::{
+    fs,
+    io::{self, Write},
+    path::PathBuf,
+    str::FromStr,
+};
 use subxt::{OnlineClient, PolkadotConfig};
+use subxt_signer::{bip39::Mnemonic, sr25519::Keypair, SecretUri};
 
-pub async fn set_account(mnemonic: Option<String>, secret_uri: Option<String>) -> Result<()> {
-    if let Some(mnemonic) = mnemonic {
-        set_account_from_mnemonic(mnemonic).await
-    } else if let Some(secret_uri) = secret_uri {
-        set_account_from_uri(secret_uri).await
-    } else {
-        Err("No mnemonic or secret URI provided.".into())
-    }
+const CONFIG_DIR: &str = ".polkacli";
+const CONFIG_FILE: &str = "config";
+
+fn config_file_path() -> PathBuf {
+    home_dir()
+        .expect("Unable to find home directory")
+        .join(CONFIG_DIR)
+        .join(CONFIG_FILE)
 }
 
-async fn set_account_from_mnemonic(mnemonic: String) -> Result<()> {
-    let mnemonic = Mnemonic::parse(&mnemonic)
-        .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
+fn read_config_file() -> Result<String> {
+    fs::read_to_string(config_file_path()).map_err(|e| {
+        if e.kind() == io::ErrorKind::NotFound {
+            io::Error::new(io::ErrorKind::NotFound, "Configuration file not found").into()
+        } else {
+            e.into()
+        }
+    })
+}
 
-    let _pair = Keypair::from_phrase(&mnemonic, None)?;
+fn write_config_file(content: &str) -> Result<()> {
+    let config_path = config_file_path();
+    if let Some(parent) = config_path.parent() {
+        fs::create_dir_all(parent)?;
+    }
 
-    save_to_config("mnemonic", &mnemonic.to_string())?;
+    let mut file = fs::OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(config_path)?;
 
-    println!("Account mnemonic saved successfully.");
+    writeln!(file, "{}", content)?;
     Ok(())
 }
 
-async fn set_account_from_uri(secret_uri: String) -> Result<()> {
-    let suri = SecretUri::from_str(&secret_uri)
-        .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
-
-    let _pair = Keypair::from_uri(&suri)
-        .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
-
-    save_to_config("secret_uri", &secret_uri)?;
-
-    println!("Account secret URI saved successfully.");
-    Ok(())
-}
-
-pub async fn set_rpc_url(url: String) -> Result<()> {
-    // Test connection to the RPC URL
-    let test_client = OnlineClient::<PolkadotConfig>::from_url(&url).await;
-    if test_client.is_err() {
-        return Err(Box::new(io::Error::new(io::ErrorKind::InvalidInput, "Failed to connect to the provided RPC URL.")));
-    }
-
-    // Save the valid URL to the config
-    save_to_config("rpc_url", &url)?;
-    println!("RPC URL saved successfully.");
-
-    Ok(())
-}
-
-fn save_to_config(key: &str, value: &str) -> Result<()> {
-    let config_dir = dirs::home_dir().unwrap().join(".polkacli");
-    let config_file = config_dir.join("config");
-
-    if !config_dir.exists() {
-        fs::create_dir_all(&config_dir)?;
-    }
-
-    let mut config_content = String::new();
-    if config_file.exists() {
-        config_content = fs::read_to_string(&config_file)?;
-    }
+fn update_config(key: &str, value: &str) -> Result<()> {
+    let mut config_content = read_config_file().unwrap_or_default();
 
     let mut updated = false;
-    let mut lines: Vec<String> = config_content
+    let new_content = config_content
         .lines()
         .map(|line| {
             if line.starts_with(key) {
@@ -81,76 +59,88 @@ fn save_to_config(key: &str, value: &str) -> Result<()> {
                 line.to_string()
             }
         })
-        .collect();
+        .collect::<Vec<String>>();
 
     if !updated {
-        lines.push(format!("{} = \"{}\"", key, value));
+        let new_line = format!("{} = \"{}\"", key, value);
+        config_content.push('\n');
+        config_content.push_str(&new_line);
     }
 
-    let mut file = fs::OpenOptions::new()
-        .write(true)
-        .create(true)
-        .truncate(true)
-        .open(config_file)?;
-
-    writeln!(file, "{}", lines.join("\n"))?;
-
+    write_config_file(&new_content.join("\n"))?;
     Ok(())
 }
+
+pub async fn set_account(mnemonic: Option<String>, secret_uri: Option<String>) -> Result<()> {
+    match (mnemonic, secret_uri) {
+        (Some(mnemonic), None) => set_account_from_mnemonic(mnemonic).await,
+        (None, Some(secret_uri)) => set_account_from_uri(secret_uri).await,
+        _ => Err("No mnemonic or secret URI provided.".into()),
+    }
+}
+
+async fn set_account_from_mnemonic(mnemonic: String) -> Result<()> {
+    let mnemonic = Mnemonic::parse(&mnemonic)
+        .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
+    Keypair::from_phrase(&mnemonic, None)?;
+    update_config("mnemonic", &mnemonic.to_string())?;
+    println!("Account mnemonic saved successfully.");
+    Ok(())
+}
+
+async fn set_account_from_uri(secret_uri: String) -> Result<()> {
+    let suri = SecretUri::from_str(&secret_uri)
+        .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
+    Keypair::from_uri(&suri)?;
+    update_config("secret_uri", &secret_uri)?;
+    println!("Account secret URI saved successfully.");
+    Ok(())
+}
+
+pub async fn set_rpc_url(url: String) -> Result<()> {
+    if OnlineClient::<PolkadotConfig>::from_url(&url).await.is_err() {
+        return Err(io::Error::new(io::ErrorKind::InvalidInput, "Failed to connect to the provided RPC URL.").into());
+    }
+
+    update_config("rpc_url", &url)?;
+    println!("RPC URL saved successfully.");
+    Ok(())
+}
+
+fn load_value_from_config(key: &str) -> Result<Option<String>> {
+    let config_content = read_config_file()?;
+    Ok(config_content
+        .lines()
+        .find_map(|line| {
+            if line.starts_with(key) {
+                line.splitn(2, " = ").nth(1).map(|value| value.trim_matches('"').to_string())
+            } else {
+                None
+            }
+        }))
+}
+
 pub fn load_account_from_config() -> Result<Keypair> {
-    let config_file = dirs::home_dir().unwrap().join(".polkacli").join("config");
-
-    if !config_file.exists() {
-        return Err(Box::new(io::Error::new(io::ErrorKind::NotFound, "Account configuration not found.")));
-    }
-
-    let config_content = fs::read_to_string(config_file)?;
-
-    if let Some(mnemonic_phrase) = config_content
-        .lines()
-        .find(|line| line.starts_with("mnemonic"))
-        .and_then(|line| line.split(" = ").nth(1))
-        .map(|mnemonic| mnemonic.trim_matches('"'))
-    {
-        let mnemonic = Mnemonic::parse(mnemonic_phrase)
+    if let Some(mnemonic) = load_value_from_config("mnemonic")? {
+        let mnemonic = Mnemonic::parse(&mnemonic)
             .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
-        return Keypair::from_phrase(&mnemonic, None)
-            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>);
-    }
-
-    if let Some(secret_uri) = config_content
-        .lines()
-        .find(|line| line.starts_with("secret_uri"))
-        .and_then(|line| line.split(" = ").nth(1))
-        .map(|secret_uri| secret_uri.trim_matches('"'))
-    {
-        let suri = SecretUri::from_str(secret_uri)
+        Keypair::from_phrase(&mnemonic, None)
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
+    } else if let Some(secret_uri) = load_value_from_config("secret_uri")? {
+        let suri = SecretUri::from_str(&secret_uri)
             .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
-        return Keypair::from_uri(&suri)
-            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>);
+        Keypair::from_uri(&suri)
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
+    } else {
+        Err(io::Error::new(io::ErrorKind::InvalidInput, "No valid mnemonic or secret URI found in config file.").into())
     }
-
-    Err(Box::new(io::Error::new(io::ErrorKind::InvalidInput, "No valid mnemonic or secret URI found in config file.")))
 }
 
 pub fn load_rpc_url_from_config() -> Result<String> {
-    let config_file = dirs::home_dir().unwrap().join(".polkacli").join("config");
+    load_value_from_config("rpc_url")?.ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "No valid RPC URL found in config file.").into())
+}
 
-    if !config_file.exists() {
-        return Err(Box::new(io::Error::new(io::ErrorKind::NotFound, "RPC URL configuration not found.")));
-    }
-
-    let config_content = fs::read_to_string(config_file)?;
-
-    if let Some(rpc_url) = config_content
-        .lines()
-        .find(|line| line.starts_with("rpc_url"))
-        .and_then(|line| line.split(" = ").nth(1))
-        .map(|url| url.trim_matches('"'))
-    {
-        return Ok(rpc_url.to_string());
-    }
-
-    Err(Box::new(io::Error::new(io::ErrorKind::InvalidInput, "No valid RPC URL found in config file.")))
+pub fn load_pinata_jwt_from_config() -> Result<Option<String>> {
+    load_value_from_config("pinata_jwt")
 }
 

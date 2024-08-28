@@ -1,6 +1,6 @@
 use crate::error::Result;
 use colored::*;
-use subxt::{OnlineClient, PolkadotConfig, utils::AccountId32};
+use subxt::utils::AccountId32;
 use crate::commands::assethub;
 use std::str::FromStr;
 use crate::client::get_client;
