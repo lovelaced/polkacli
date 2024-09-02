@@ -1,6 +1,6 @@
 # PolkaCLI
 
-**PolkaCLI** is a command-line interface (CLI) tool designed for interacting with AssetHub, Polkadot's official rollup dedicated to assets . With PolkaCLI, users can mint NFTs, manage collections, check balances, and perform various other operations directly from the terminal.
+**PolkaCLI** is a command-line interface (CLI) tool designed for interacting with AssetHub, Polkadot's official rollup dedicated to assets. With PolkaCLI, users can mint NFTs, manage collections, check balances, and perform various other operations directly from the terminal.
 
 ## Features
 
@@ -47,7 +47,7 @@ Before using PolkaCLI, configure your account and RPC URL:
    polkacli set-rpc <your rpc url>
    ```
 
-   This configures the RPC endpoint used for blockchain interactions.
+   This configures the RPC endpoint used for blockchain interactions. The default RPC is Paseo AssetHub provided by Dwellir.
 
 3. **Optional Pinata JWT**:
    If you have a Pinata account and want to use it for pinning files to IPFS, you can add your Pinata JWT to the configuration file. This will enable PolkaCLI to pin files using your Pinata account instead of the default IPFS gateway.
