@@ -1,90 +1,159 @@
-## polkacli: your gateway to the magical world of AssetHub
+# PolkaCLI
 
-welcome to **polkacli**, the command-line tool you never knew you needed (or wanted) for interacting with AssetHub. think of it as your passport to the cryptoverse, only instead of stamps, you get NFTs, balances, and a healthy dose of blockchain jargon.  
+**PolkaCLI** is a command-line interface (CLI) tool designed for interacting with AssetHub, Polkadot's official rollup dedicated to assets . With PolkaCLI, users can mint NFTs, manage collections, check balances, and perform various other operations directly from the terminal.
 
-### why should you care?
+## Features
 
-let's be real, you’re probably already neck-deep in crypto. so why not take the plunge and start managing your AssetHub NFTs, balances, and accounts with the finest cli on the market? whether you're minting a new NFT or just showing off your collection, **polkacli** is here to make sure you do it in style (or at least with less hassle).
+- **NFT Management**
+  - Mint new NFT collections and individual NFTs.
+  - Display detailed information about specific NFTs and collections.
 
-### installation
+- **Account Management**
+  - Configure and manage accounts using mnemonic phrases or secret URIs.
+  - Set up and use a custom RPC URL for network interactions.
+  - Check account balances and view account details.
 
-assuming you know your way around a terminal, and have rust installed, just clone this repo and build it yourself. bc why wouldn't you?
+- **Transactions**
+  - Send funds to any address on the network.
+
+## Installation
+
+To install **PolkaCLI**, clone the repository and build the project using Cargo:
 
 ```bash
-git clone https://github.com/your-repo/polkacli.git
+git clone https://github.com/yourusername/polkacli.git
 cd polkacli
 cargo build --release
 ```
 
-or, if you're feeling adventurous (and let's face it, you are), try installing via some fancy package manager. (coming soon™, probably.)
+Ensure you have Rust installed on your system. If not, you can install it from [rust-lang.org](https://www.rust-lang.org/).
 
-### usage
+## Configuration
 
-so you've installed **polkacli**. now what? here’s a quick rundown of what you can do. spoiler alert: it's a lot.
+Before using PolkaCLI, configure your account and RPC URL:
 
-```bash
-polkacli <COMMAND>
-```
+1. **Set Account**:
+   ```bash
+   polkacli set-account --mnemonic "<your mnemonic here>"
+   ```
+   or
+   ```bash
+   polkacli set-account --secret-uri "<your secret URI here>"
+   ```
+   This will save your account configuration to a local file in your home directory.
 
-#### commands
+2. **Set RPC URL**:
+   ```bash
+   polkacli set-rpc <your rpc url>
+   ```
 
-- `mint-collection`: 
-  - mint a shiny new NFT collection. your wallet will thank you later.
-  - _requires the `nft` feature_.
+   This configures the RPC endpoint used for blockchain interactions.
 
-- `mint-nft <COLLECTION_ID> <NFT_ID>`: 
-  - mint an NFT within your collection. show the world (or maybe just your cat) what you've created.
-  - _requires the `nft` feature_.
+3. **Optional Pinata JWT**:
+   If you have a Pinata account and want to use it for pinning files to IPFS, you can add your Pinata JWT to the configuration file. This will enable PolkaCLI to pin files using your Pinata account instead of the default IPFS gateway.
 
-- `show-nft <COLLECTION_ID> <NFT_ID>`: 
-  - retrieve and display the juicy details of a specific NFT. bc knowledge is power.
+## Usage
 
-- `show-collection <COLLECTION_ID>`: 
-  - get the lowdown on a specific collection. it’s like stalking, but for NFTs.
+### NFT Minting Workflow
 
-- `send <ADDRESS> <AMOUNT>`: 
-  - send funds to an address. it’s like being a crypto philanthropist, minus the tax benefits.
+When minting NFTs, PolkaCLI allows you to include metadata and images, either directly or inferred from filenames:
 
-- `set-account --mnemonic <MNEMONIC> | --secret-uri <SECRET_URI>`: 
-  - configure your account. it's ez. it's in plaintext on your drive so don't use this for anything important plz
+- **--json `<nft.json>`**:
+  - If the `--json` argument is provided, the specified JSON file is loaded.
+  - If the JSON file already contains an `"image"` field, PolkaCLI will use the link in that field directly.
+  - If the `"image"` field is absent or empty, and you provide an image using `--image <image.jpg>`, PolkaCLI will pin the specified image to IPFS and update the JSON file with the IPFS link.
+  - If no image is provided via `--image`, PolkaCLI will attempt to infer the image filename based on the JSON file's name (e.g., `nft.json` -> `nft.jpg`).
+  - If no image is found or provided, the minting process will fail.
+  
+- **--image `<image.jpg>`**:
+  - If the `--image` argument is provided, the specified image file is pinned to IPFS, and its link is added to the JSON file.
+  - The `--json` argument is required when using `--image`. If not provided, the process will fail.
 
-- `balance [ADDRESS]`: 
-  - check the balance of the configured account, or any account you can dig up an address for. you might be richer than you think.
+### Commands
 
-- `account <PUBLIC_KEY>`: 
-  - get info about an account by its public key. bc who doesn’t like snooping on wallets?
+Here is a summary of the available commands in PolkaCLI:
 
-### advanced usage
+#### NFT Commands (Requires `nft` Feature)
 
-let’s be honest, if you're here, you’re probably going to figure out the advanced stuff on your own. but just in case:
+- **mint-collection**:
+  - Mint a new NFT collection. Optionally provide JSON metadata and images.
+  - Example:
+    ```bash
+    polkacli mint-collection --json ./metadata --image ./images
+    ```
 
-1. **config file**: create a `.polkacli` config file in your home directory to store your account details, bc typing mnemonics every time is so 2020. or you can use the `set-account` cli to do it for you - duh.
-2. **networking**: by default, **polkacli** connects to AssetHub. if you want to connect to another network, well, good luck.
+- **mint-nft**:
+  - Mint a new NFT within an existing collection. Supports optional metadata and image file handling as described above.
+  - Example:
+    ```bash
+    polkacli mint-nft <collection_id> <nft_id> --json nft.json --image nft.jpg
+    ```
 
-### contributing
+- **show-nft**:
+  - Display details of a specific NFT, including its JSON metadata and image if requested.
+  - Example:
+    ```bash
+    polkacli show-nft <collection_id> <nft_id> --json --image
+    ```
 
-found a bug? have a feature request? want to write a README yourself? pull requests are welcome. just remember: if your code breaks my code, i will find you.
+- **show-collection**:
+  - Retrieve and display details of a specific NFT collection.
+  - Example:
+    ```bash
+    polkacli show-collection <collection_id>
+    ```
 
-### disclaimer
+#### Account and Transaction Commands
 
-**polkacli** comes with no warranty, express or implied. use at your own risk. if you lose your life savings while using this tool, that's on you, not me. (but seriously, maybe don’t do that.)
+- **set-account**:
+  - Configure the account to use with PolkaCLI, either via a mnemonic or secret URI.
+  - Example:
+    ```bash
+    polkacli set-account --mnemonic "<your mnemonic here>"
+    ```
 
-### license
+- **set-rpc**:
+  - Set the RPC URL for blockchain interactions.
+  - Example:
+    ```bash
+    polkacli set-rpc "<rpc url>"
+    ```
 
-licensed under apache 2.0, because open source should be free, but not in the "i can't make money off this" way.
+- **send**:
+  - Send funds to a specified address.
+  - Example:
+    ```bash
+    polkacli send <address> <amount>
+    ```
 
-happy hacking. or whatever it is you're doing.
---------
-info on how minting nft flow works:
+- **balance**:
+  - Check the balance of the configured account or another specified address.
+  - Example:
+    ```bash
+    polkacli balance [optional: <address>]
+    ```
 
---json <nft.json>:
+- **account**:
+  - Retrieve information about an account using its public key.
+  - Example:
+    ```bash
+    polkacli account <public_key>
+    ```
 
-If the --json argument is provided, the specified JSON file is loaded.
-The code checks if the JSON file already contains an "image" field.
-If the "image" field is present, it uses that link directly.
-If the "image" field is absent and --image <image.jpg> is provided, the specified image file is pinned to IPFS, and its IPFS link is added to the JSON.
-If --image is not provided, it attempts to infer an image file based on the JSON file's name (e.g., nft.json -> nft.jpg).
---image <image.jpg>:
+## Configuration File
 
-If the --image argument is provided, the specified image file is pinned to IPFS and linked in the JSON.
-If --json is not provided but --image is, the code will fail because a corresponding JSON file is required to mint the NFT.
+The configuration file for PolkaCLI is stored in your home directory under `.polkacli/config`. This file stores the mnemonic, secret URI, RPC URL, and optionally, the Pinata JWT for IPFS pinning.
+
+You can manually edit this file if necessary, or use the CLI commands to configure it.
+
+## Contributing
+
+Contributions are welcome! If you find a bug or have a feature request, feel free to open an issue or submit a pull request.
+
+## License
+
+PolkaCLI is licensed under the Apache 2.0 License. See the `LICENSE` file for more details.
+
+---
+
+**Disclaimer**: PolkaCLI comes with no warranty. Use at your own risk. The authors are not responsible for any loss of funds or other damages resulting from the use of this tool.
