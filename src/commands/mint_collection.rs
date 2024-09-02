@@ -12,6 +12,7 @@ use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::collections::HashMap;
 use std::ffi::OsStr;
+use std::error::Error;
 
 // Function to convert CollectionSettings to the required BitFlags1 type
 fn to_collection_bitflags(
@@ -25,16 +26,45 @@ fn to_collection_bitflags(
 
 // Function to pin data to IPFS
 async fn pin_to_ipfs(data: &[u8]) -> Result<String> {
-    let client = Client::new();
-    let response = client
-        .post("https://ipfs.io/ipfs")
-        .body(data.to_vec())
-        .send()
-        .await
-        .map_err(|e| format!("Failed to pin to IPFS: {}", e))?;
+    let pinata_jwt = crate::config::load_pinata_jwt_from_config()?;
+    let pinata_gateway = "https://api.pinata.cloud";
 
-    let ipfs_hash = response.text().await.map_err(|e| format!("Failed to read IPFS response: {}", e))?;
-    Ok(format!("ipfs://{}", ipfs_hash))
+    let client = Client::new();
+
+    if let Some(jwt) = pinata_jwt {
+        let form = reqwest::multipart::Form::new()
+            .part("file", reqwest::multipart::Part::bytes(data.to_vec()).file_name("data"));
+
+        let response = client
+            .post(&format!("{}/pinning/pinFileToIPFS", pinata_gateway))
+            .bearer_auth(jwt)  // Use JWT for authorization
+            .multipart(form)
+            .send()
+            .await
+            .map_err(|e| Box::new(e) as Box<dyn Error>)?;
+
+        if !response.status().is_success() {
+            return Err(Box::new(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("Failed to pin to IPFS via Pinata: {:?}", response.text().await),
+            )));
+        }
+
+        let pin_response: serde_json::Value = response.json().await.map_err(|e| Box::new(e) as Box<dyn Error>)?;
+        let ipfs_hash = pin_response["IpfsHash"].as_str().ok_or("Failed to parse IPFS hash from Pinata response")?;
+
+        Ok(format!("ipfs://{}", ipfs_hash))
+    } else {
+        let response = client
+            .post("https://ipfs.io/ipfs")
+            .body(data.to_vec())
+            .send()
+            .await
+            .map_err(|e| Box::new(e) as Box<dyn Error>)?;
+
+        let ipfs_hash = response.text().await.map_err(|e| Box::new(e) as Box<dyn Error>)?;
+        Ok(format!("ipfs://{}", ipfs_hash))
+    }
 }
 
 // Function to load JSON from a file
@@ -81,6 +111,8 @@ pub async fn mint_collection(json_folder: Option<&str>, image_folder: Option<&st
     let account_signer = crate::config::load_account_from_config()?;
     let admin: MultiAddress<AccountId32, ()> = account_signer.public_key().into();
 
+    let mut pinned_data = Vec::new();
+
     // Handle optional JSON and image folders
     if let (Some(json_folder_str), Some(image_folder_str)) = (json_folder, image_folder) {
         let json_folder_path = Path::new(json_folder_str);
@@ -89,21 +121,30 @@ pub async fn mint_collection(json_folder: Option<&str>, image_folder: Option<&st
         // Link JSON files with their corresponding images
         let linked_data = link_json_with_images(json_folder_path, image_folder_path)?;
 
-        let mut pinned_data = Vec::new();
-
         for (image_name, (mut json_data, image_path)) in linked_data {
-            // Pin image to IPFS
-            let image_bytes = std::fs::read(&image_path).map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
-            let ipfs_image_link = pin_to_ipfs(&image_bytes).await?;
-            println!("Pinned image to IPFS: {}", ipfs_image_link);
+            let mut sp = Spinner::new(Spinners::Dots12, format!("🖼️ Processing image: {}", image_name).yellow().bold().to_string());
 
-            // Update JSON with IPFS image link if not already present
-            json_data["image"] = Value::String(ipfs_image_link.clone());
+            // If the JSON already contains an image link, use it
+            if let Some(image) = json_data.get("image").and_then(Value::as_str) {
+                if !image.is_empty() {
+                    sp.stop_and_persist("🔗", format!("Using existing image link in JSON for {}.", image_name).green().bold().to_string());
+                }
+            }
+
+            if json_data.get("image").and_then(Value::as_str).map(|s| s.is_empty()).unwrap_or(true) {
+                // Pin image to IPFS
+                let image_bytes = std::fs::read(&image_path).map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+                let ipfs_image_link = pin_to_ipfs(&image_bytes).await?;
+                json_data["image"] = Value::String(ipfs_image_link.clone());
+
+                sp.stop_and_persist("✅", format!("Image pinned to IPFS and link added to JSON for {}.", image_name).green().bold().to_string());
+            }
 
             // Pin updated JSON to IPFS
+            let sp = Spinner::new(Spinners::Dots12, format!("📦 Pinning JSON metadata for {} to IPFS...", image_name).yellow().bold().to_string());
             let json_bytes = serde_json::to_vec(&json_data).map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
             let ipfs_json_link = pin_to_ipfs(&json_bytes).await?;
-            println!("Pinned JSON to IPFS: {}", ipfs_json_link);
+            sp.stop_and_persist("✅", format!("JSON metadata for {} pinned to IPFS.", image_name).green().bold().to_string());
 
             pinned_data.push((image_name, ipfs_json_link));
         }

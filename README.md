@@ -40,7 +40,7 @@ Before using PolkaCLI, configure your account and RPC URL:
    ```bash
    polkacli set-account --secret-uri "<your secret URI here>"
    ```
-   This will save your account configuration to a local file in your home directory.
+   This will save your account configuration to a local file in your home directory. WARNING: this currently saves the private key in plaintext.
 
 2. **Set RPC URL**:
    ```bash
