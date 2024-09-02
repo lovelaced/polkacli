@@ -104,7 +104,6 @@ async fn handle_ipfs_image(image_link: &str) -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "nft")]
 pub async fn show_nft(collection_id: u32, nft_id: u32, show_json: bool, show_image: bool) -> Result<()> {
     let api = get_client().await?;
     println!("{}", "🔍 Fetching NFT information...".green().bold());

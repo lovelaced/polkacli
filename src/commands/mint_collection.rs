@@ -103,7 +103,6 @@ fn link_json_with_images(json_folder: &Path, image_folder: &Path) -> Result<Hash
     Ok(linked_data)
 }
 
-#[cfg(feature = "nft")]
 pub async fn mint_collection(json_folder: Option<&str>, image_folder: Option<&str>) -> Result<()> {
     let api = get_client().await?;
     println!("{}", "🚀 Connection with parachain established.".green().bold());
@@ -141,7 +140,7 @@ pub async fn mint_collection(json_folder: Option<&str>, image_folder: Option<&st
             }
 
             // Pin updated JSON to IPFS
-            let sp = Spinner::new(Spinners::Dots12, format!("📦 Pinning JSON metadata for {} to IPFS...", image_name).yellow().bold().to_string());
+            let mut sp = Spinner::new(Spinners::Dots12, format!("📦 Pinning JSON metadata for {} to IPFS...", image_name).yellow().bold().to_string());
             let json_bytes = serde_json::to_vec(&json_data).map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
             let ipfs_json_link = pin_to_ipfs(&json_bytes).await?;
             sp.stop_and_persist("✅", format!("JSON metadata for {} pinned to IPFS.", image_name).green().bold().to_string());

@@ -4,7 +4,6 @@ use crate::cli::Commands;
 use crate::commands::account::account_info;
 use crate::config::set_account;
 use crate::error::Result;
-#[cfg(feature = "nft")]
 use crate::commands::mint_collection::mint_collection;
 use crate::commands::mint_nft::mint_nft;
 use crate::commands::show_nft::show_nft;
@@ -21,12 +20,14 @@ pub mod mint_nft;
 pub mod show_nft;
 pub mod show_collection;
 pub mod send;
+#[cfg(feature = "nft")]
+pub mod list_nfts;
 
 pub async fn run_command(cli: Commands) -> Result<()> {
     match cli {
-        #[cfg(feature = "nft")]
+#[cfg(feature = "nft")]
+        Commands::ListNfts { address } => list_nfts::list_nfts(address).await,
         Commands::MintCollection { json, image } => mint_collection(json.as_deref(), image.as_deref()).await,
-        #[cfg(feature = "nft")]
         Commands::MintNft { collection_id, nft_id, json, image } => mint_nft(collection_id, nft_id, json.as_deref(), image.as_deref()).await,
         Commands::ShowNft { collection_id, nft_id, json, image } => show_nft(collection_id, nft_id, json, image).await,
         Commands::ShowCollection { collection_id } => show_collection(collection_id).await,

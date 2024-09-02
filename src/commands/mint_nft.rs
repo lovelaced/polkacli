@@ -83,7 +83,6 @@ fn find_image_for_json(json_path: &Path) -> Result<PathBuf> {
     Err("No matching image found for the provided JSON file.".into())
 }
 
-#[cfg(feature = "nft")]
 pub async fn mint_nft(collection_id: u32, nft_id: u32, json_path: Option<&str>, image_path: Option<&str>) -> Result<()> {
     let api = get_client().await?;
     println!("{}", "🚀 Connection with parachain established.".green().bold());

@@ -14,7 +14,6 @@ fn format_account_ss58(account_id: &AccountId32) -> String {
     account_id.to_string() // Convert to SS58 if required by your application
 }
 
-#[cfg(feature = "nft")]
 pub async fn show_collection(collection_id: u32) -> Result<()> {
     let api = get_client().await?;
     println!("{}", "🔍 Fetching Collection information...".green().bold());

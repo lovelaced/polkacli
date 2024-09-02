@@ -10,7 +10,6 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    #[cfg(feature = "nft")]
     /// Mint a new NFT collection
     MintCollection {
         /// Folder containing JSON metadata files
@@ -21,6 +20,11 @@ pub enum Commands {
         image: Option<String>,
     },
     #[cfg(feature = "nft")]
+    ListNfts {
+
+        #[arg(value_name = "ADDRESS")]
+        address: Option<String>,
+   },
     /// Mint a new NFT within a collection
     MintNft {
         #[arg(value_name = "COLLECTION_ID")]
