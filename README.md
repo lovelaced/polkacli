@@ -64,6 +64,20 @@ When minting NFTs, PolkaCLI allows you to include metadata and images, either di
   - If the `"image"` field is absent or empty, and you provide an image using `--image <image.jpg>`, PolkaCLI will pin the specified image to IPFS and update the JSON file with the IPFS link.
   - If no image is provided via `--image`, PolkaCLI will attempt to infer the image filename based on the JSON file's name (e.g., `nft.json` -> `nft.jpg`).
   - If no image is found or provided, the minting process will fail.
+
+An example of valid NFT JSON is as follows:
+
+```json
+{
+  "animation_url": "",
+  "attributes": ["rare"],
+  "description": "a cool nft",
+  "external_url": "https://my.nft.shop",
+  "image": "ipfs://Qmf4ECDXU4g4GDhAQQQpu6QpiE7GHJmmDvxGR1AeF4Atq3",
+  "name": "Edition 1",
+  "type": "image/png"
+}
+```
   
 - **--image `<image.jpg>`**:
   - If the `--image` argument is provided, the specified image file is pinned to IPFS, and its link is added to the JSON file.
