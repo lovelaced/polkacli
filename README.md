@@ -87,7 +87,7 @@ An example of valid NFT JSON is as follows:
 
 Here is a summary of the available commands in PolkaCLI:
 
-#### NFT Commands (Requires `nft` Feature)
+#### NFT Commands
 
 - **mint-collection**:
   - Mint a new NFT collection. Optionally provide JSON metadata and images.
