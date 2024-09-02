@@ -23,7 +23,7 @@ To install **PolkaCLI**, clone the repository and build the project using Cargo:
 ```bash
 git clone https://github.com/lovelaced/polkacli.git
 cd polkacli
-cargo build --release --features 'nft'
+cargo build --release
 ```
 
 Ensure you have Rust installed on your system. If not, you can install it from [rust-lang.org](https://www.rust-lang.org/).
