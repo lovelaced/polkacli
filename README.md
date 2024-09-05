@@ -7,6 +7,7 @@
 - **NFT Management**
   - Mint new NFT collections and individual NFTs.
   - Display detailed information about specific NFTs and collections.
+  - Set metadata of existing NFTs.
 
 - **Account Management**
   - Configure and manage accounts using mnemonic phrases or secret URIs.
@@ -101,6 +102,13 @@ Here is a summary of the available commands in PolkaCLI:
   - Example:
     ```bash
     polkacli mint-nft <collection_id> <nft_id> --json nft.json --image nft.jpg
+    ```
+
+- **set-nft-metadata**:
+  - Set the metadata for an existing NFT within an existing collection. Supports metadata and image file handling as described above.
+  - Example:
+    ```bash
+    polkacli set-nft-metadata <collection_id> <nft_id> --json nft.json --image nft.jpg
     ```
 
 - **show-nft**:
