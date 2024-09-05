@@ -57,6 +57,8 @@ Before using PolkaCLI, configure your account and RPC URL:
 
 ### NFT Minting Workflow
 
+*It is recommended to use Pinata for pinning. Please add `pinata_jwt = "yourJWTsecret"` to `~/.polkacli/config`.*
+
 When minting NFTs, PolkaCLI allows you to include metadata and images, either directly or inferred from filenames:
 
 - **--json `<nft.json>`**:
