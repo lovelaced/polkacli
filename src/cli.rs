@@ -38,6 +38,19 @@ pub enum Commands {
         #[arg(long)]
         image: Option<String>,
     },
+    /// Mint a new NFT within a collection
+    SetNftMetadata {
+        #[arg(value_name = "COLLECTION_ID")]
+        collection_id: u32,
+        #[arg(value_name = "NFT_ID")]
+        nft_id: u32,
+        /// Path to JSON metadata file
+        #[arg(long)]
+        json: Option<String>,
+        /// Path to image file
+        #[arg(long)]
+        image: Option<String>,
+    },
     ShowNft {
         #[arg(value_name = "COLLECTION_ID")]
         collection_id: u32,
