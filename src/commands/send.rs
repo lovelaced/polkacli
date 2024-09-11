@@ -10,7 +10,7 @@ use tokio::time::sleep;
 use crate::commands::assethub;
 use crate::client::get_client;
 
-pub async fn send(recipient: String, amount: u128) -> Result<()> {
+pub async fn send(recipient: String, amount: f64) -> Result<()> {
     // Establish a connection to the parachain
     let api = get_client().await?;
     println!("{}", "🚀 Connection with parachain established.".green().bold());
@@ -22,8 +22,9 @@ pub async fn send(recipient: String, amount: u128) -> Result<()> {
     let account_signer = crate::config::load_account_from_config()?;
     let from: AccountId32 = account_signer.public_key().into();
 
-    // Convert amount to Planck (1 PAS = 10^10 Plancks)
-    let amount_in_plancks = amount * 10u128.pow(10);
+    // Convert PAS to Planck (1 PAS = 10^10 Plancks)
+    let plancks_per_pas = 10u128.pow(10) as f64;
+    let amount_in_plancks = (amount * plancks_per_pas).round() as u128;
 
     // Create transfer payload
     let payload = assethub::tx().balances().transfer_keep_alive(MultiAddress::Id(recipient.clone()), amount_in_plancks);
@@ -62,9 +63,9 @@ pub async fn send(recipient: String, amount: u128) -> Result<()> {
         recipient.to_string().bright_white()
     );
     println!(
-        "{}: {} PAS",
+        "{}: {:.10} PAS",
         "💰 Amount".cyan().bold(),
-        amount.to_string().bright_white()
+        amount
     );
     println!(
         "{}: {}",

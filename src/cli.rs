@@ -93,7 +93,7 @@ pub enum Commands {
         address: String,
 
         #[arg(value_name = "AMOUNT")]
-        amount: u128,
+        amount: f64,
     },
 
     /// Print the balance of the configured account or a provided address
